@@ -1,6 +1,6 @@
 /*
     Modbus.cpp - Source for Modbus Base Library
-    Copyright (C) 2014 André Sarmento Barbosa
+    Copyright (C) 2014 AndrÃ© Sarmento Barbosa
 */
 #include "Modbus.h"
 
@@ -261,7 +261,15 @@ void Modbus::writeMultipleRegisters(byte* frame,word startreg, word numoutputs, 
         }
     }
 
-    //Clean frame buffer
+    word val;
+    word i = 0;
+	while(numoutputs--) {
+        val = (word)frame[6+i*2] << 8 | (word)frame[7+i*2];
+        this->Hreg(startreg + i, val);
+        i++;
+	}
+	
+	//Clean frame buffer
     free(_frame);
 	_len = 5;
     _frame = (byte *) malloc(_len);
@@ -275,14 +283,6 @@ void Modbus::writeMultipleRegisters(byte* frame,word startreg, word numoutputs, 
     _frame[2] = startreg & 0x00FF;
     _frame[3] = numoutputs >> 8;
     _frame[4] = numoutputs & 0x00FF;
-
-    word val;
-    word i = 0;
-	while(numoutputs--) {
-        val = (word)frame[6+i*2] << 8 | (word)frame[7+i*2];
-        this->Hreg(startreg + i, val);
-        i++;
-	}
 
     _reply = MB_REPLY_NORMAL;
 }
@@ -478,21 +478,6 @@ void Modbus::writeMultipleCoils(byte* frame,word startreg, word numoutputs, byte
         }
     }
 
-    //Clean frame buffer
-    free(_frame);
-	_len = 5;
-    _frame = (byte *) malloc(_len);
-    if (!_frame) {
-        this->exceptionResponse(MB_FC_WRITE_COILS, MB_EX_SLAVE_FAILURE);
-        return;
-    }
-
-    _frame[0] = MB_FC_WRITE_COILS;
-    _frame[1] = startreg >> 8;
-    _frame[2] = startreg & 0x00FF;
-    _frame[3] = numoutputs >> 8;
-    _frame[4] = numoutputs & 0x00FF;
-
     byte bitn = 0;
     word totoutputs = numoutputs;
     word i;
@@ -506,6 +491,21 @@ void Modbus::writeMultipleCoils(byte* frame,word startreg, word numoutputs, byte
         startreg++;
 	}
 
+	    //Clean frame buffer
+    free(_frame);
+	_len = 5;
+    _frame = (byte *) malloc(_len);
+    if (!_frame) {
+        this->exceptionResponse(MB_FC_WRITE_COILS, MB_EX_SLAVE_FAILURE);
+        return;
+    }
+
+    _frame[0] = MB_FC_WRITE_COILS;
+    _frame[1] = startreg >> 8;
+    _frame[2] = startreg & 0x00FF;
+    _frame[3] = numoutputs >> 8;
+    _frame[4] = numoutputs & 0x00FF;
+	
     _reply = MB_REPLY_NORMAL;
 }
 #endif
